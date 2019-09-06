@@ -1,9 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"log"
-	"time"
+	"os"
 
 	"github.com/fatih/color"
 	"github.com/jmhobbs/incubator/device"
@@ -12,7 +13,7 @@ import (
 )
 
 func main() {
-	var pin *string = flag.String("pin", "17", "GPIO pin the relay is connected to")
+	var triggerPin *string = flag.String("trigger", "22", "GPIO pin the relay is connected to")
 	flag.Parse()
 
 	_, err := host.Init()
@@ -20,16 +21,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	relay := device.NewRelay(gpioreg.ByName(*pin))
+	relay := device.NewRelay(gpioreg.ByName(*triggerPin))
 
+	reader := bufio.NewReader(os.Stdin)
 	for {
-		if relay.IsOpen() {
-			color.Green("Relay is OPEN")
-		} else {
-			color.Red("Relay is CLOSED")
-		}
-
+		reader.ReadString('\n')
 		relay.Toggle()
-		time.Sleep(time.Second * 2)
+
+		if relay.IsClosed() {
+			color.Green("Relay is CLOSED")
+		} else {
+			color.Red("Relay is OPEN")
+		}
 	}
 }
